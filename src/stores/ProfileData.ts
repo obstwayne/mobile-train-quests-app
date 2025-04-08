@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import axios from 'axios';
+
+const baseUrl = 'https://localhost:5433/api';
 
 export const useProfileStore = defineStore('profile', () => {
     const exercises = ref([
@@ -10,12 +13,9 @@ export const useProfileStore = defineStore('profile', () => {
         { id: 5, name: 'Pull-ups', target: 100, completed: 0, isCompleted: false, lastCompletedDate: '' },
     ]);
 
-    const profile = ref({
-        name: 'Wayne',
-        level: 0,
-        experience: 0,
-        stats: { strength: 1, endurance: 0, speed: 0 },
-    });
+  const profile = ref([]);
+  const exercises = ref([]);
+  const achievements = ref([]);
 
     const achievements = ref([
       { id: 0, name: 'Weak man', description: '0', achieved: false, condition: () => profile.value.level >= 1 },
