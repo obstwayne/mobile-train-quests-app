@@ -5,12 +5,14 @@ import axios from 'axios';
 const baseUrl = 'https://localhost:5433/api';
 
 export const useProfileStore = defineStore('profile', () => {
+  
   //todo could add data types
   // interface User {
   //   id: number;
   //   name: string;
   // }
   // const users = ref<User[]>([]);
+
 
   const profile = ref([]);
   const exercises = ref([]);
@@ -121,4 +123,5 @@ export const useProfileStore = defineStore('profile', () => {
   //   }
 
   return { exercises, profile, achievements, saveData, loadData, fetchProfile, saveProfile };
+
 });

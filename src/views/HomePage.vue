@@ -20,16 +20,26 @@
                 @ionChange="completeExercise(index)"></ion-checkbox>
             </template>
             <template v-else>
-              <ion-icon name="checkmark" slot="end"></ion-icon>
+              <ion-button>
+                <ion-icon :icon="checkmarkOutline" slot="icon-only"></ion-icon>
+              </ion-button>
+              <!-- for double exercise reps
+
+              <ion-button @click="moreExercises">
+              </ion-button>
+                <ion-icon :icon="checkmarkDoneOutline" slot="end"></ion-icon>
+            -->
             </template>
           </ion-item>
           <ion-item v-if="selectedExerciseIndex === index && canCompleteExercise(exercise)">
-            <ion-range aria-label="Custom range" :min="0" :max="99" :value="exercise.completed" :pin="true"
+            <ion-range aria-label="Custom range" :min="0" :max="100" :value="exercise.completed" :pin="true"
               @ionChange="updateCompleted(index, $event)"></ion-range>
             <ion-button @click="toggleDetails(index)">OK</ion-button>
           </ion-item>
         </template>
       </ion-list>
+
+
       <ion-modal :is-open="isModalOpen" @didDismiss="closeModal" :initial-breakpoint="0.5" :breakpoints="[0, 0.5, 1]">
         <ion-content class="ion-padding">
           <ion-list>
@@ -71,18 +81,31 @@ import {
   IonButtons
 } from '@ionic/vue';
 import { useProfileStore } from '@/stores/ProfileData';
-
+import { checkmarkOutline } from 'ionicons/icons';
+//TODO добавить импорт checkmarkDoneOutline from icons
 //use store
 const store = useProfileStore();
+const { loadData } = store;
+
 const { exercises, profile, saveData } = store;
 
-const selectedExerciseIndex = ref(null);
+const selectedExerciseIndex = ref();
 const isModalOpen = ref(false);
 const selectedMode = ref('mode1');
 
 // set completed reps
-const toggleDetails = (index) => {
-  selectedExerciseIndex.value = selectedExerciseIndex.value === index ? null : index;
+const toggleDetails = (index: number) => {
+  if (selectedExerciseIndex.value === index) {
+    if (exercises[index].completed === 100) {
+      console.log('resp completed with 100 and Ok clicked');
+      exercises[index].isCompleted = true;
+      completeExercise(index);
+    }
+    selectedExerciseIndex.value = null;
+  } else {
+    selectedExerciseIndex.value = index;
+  }
+  // selectedExerciseIndex.value = selectedExerciseIndex.value === index ? null : index;
 };
 
 const updateCompleted = (index: number, event: CustomEvent) => {
@@ -90,20 +113,22 @@ const updateCompleted = (index: number, event: CustomEvent) => {
 };
 
 //  limit today complete
-const canCompleteExercise = (exercise) => {
+const canCompleteExercise = (exercise: any) => {
   const today = new Date().toISOString().split('T')[0];
   return !exercise.isCompleted || exercise.lastCompletedDate !== today;
 };
 
 // end exercises
 const completeExercise = (index: number) => {
+  console.log('want to complete exercise');
   const exercise = exercises[index];
   console.log(exercise);
   if (exercise && exercise.isCompleted) {
-    // exercise.lastCompletedDate = new Date().toISOString().split('T')[0];
-    profile.experience += 5; // Experience
+    exercise.lastCompletedDate = new Date().toISOString().split('T')[0];
+    profile.experience += 75;
     console.log('Experience updated:', profile.experience);
-    toggleDetails(index);
+    increaseStats(index);
+    // toggleDetails(index);
     saveData();
     checkLevelUp(); // Is level up??
   } else {
@@ -126,16 +151,21 @@ const applyMode = () => {
 
 // is levelled up
 const checkLevelUp = () => {
+  console.log('start to check if could lvl up');
   if (profile.experience >= 100) {
+    console.log('should lvl up');
     profile.level += 1;
     profile.experience -= 100;
-    increaseStats();
+  } else {
+    console.log('lvl checked and not complete');
   }
 }
 
 // increase stats
-const increaseStats = () => {
-  exercises.forEach((exercise) => {
+const increaseStats = (index: number) => {
+  console.log('starting increase stats');
+  const exercise = exercises[index];
+  // exercises.forEach((exercise) => {
     if (exercise.isCompleted) {
       if (exercise.name.includes('Push-ups') || exercise.name.includes('Pull-ups')) {
         profile.stats.strength += 1;
@@ -144,18 +174,28 @@ const increaseStats = () => {
       } else if (exercise.name.includes('Running')) {
         profile.stats.speed += 1;
       }
+    } else {
+      console.log('exercise is not completed');
     }
-  });
+  // });
 };
 
+// const moreExercises = () => {
 
-onMounted(store.loadData);
+// };
+
+
+onMounted(() => {
+  loadData();
+  console.log('Tab3 mounted, experience:', profile.experience);
+});
+
 </script>
 
 <style scoped>
 ion-modal {
   --height: 400px;
-  --background: #ffffff;
+  /* --background: #ffffff; */
   /* Явно задаем белый фон */
   --border-radius: 10px;
   /* Скругленные углы */
@@ -164,7 +204,7 @@ ion-modal {
 }
 
 ion-content {
-  --background: #ffffff;
+  /* --background: #ffffff; */
   /* Фон контента модального окна */
 }
 
